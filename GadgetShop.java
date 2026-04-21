@@ -131,6 +131,17 @@ public class GadgetShop extends Application
         Button downloadMusicButton = new Button("Download Music");
         downloadMusicButton.setLayoutX(500);
         downloadMusicButton.setLayoutY(340);
+        
+        Button searchButton = new Button("Search");
+        
+        // This button is my additional feature. 
+        // It lets the user search for a gadget by typing the model name. 
+        
+        searchButton.setLayoutX(620);
+        searchButton.setLayoutY(340);
+
+
+        
 
         // Add Mobile button
         // This button is used to add a mobile phone to the system.
@@ -158,17 +169,21 @@ public class GadgetShop extends Application
         // The MP3 is added to the gadget list.
         // A message is displayed to let the user know it worked.
         addMP3Button.setOnAction(e ->
-        {
-            MP3 m = new MP3(
-                getModelInput(),
-                getPriceInput(),
-                getWeightInput(),
-                getSizeInput(),
-                getMemoryInput()
-            );
-            gadgets.add(m);
-            logArea.appendText("Added MP3: " + m + System.lineSeparator());
-        });
+{
+    try {
+        MP3 m = new MP3(
+            getModelInput(),
+            getPriceInput(),
+            getWeightInput(),
+            getSizeInput(),
+            getMemoryInput()
+        );
+        gadgets.add(m);
+        logArea.appendText("Added MP3: " + m + System.lineSeparator());
+    } catch (NumberFormatException ex) {
+        logArea.appendText("Please enter valid values for MP3." + System.lineSeparator());
+    }
+});
 
         // Clear button
         // This button clears all the input boxes on the screen.
@@ -213,34 +228,32 @@ public class GadgetShop extends Application
         //If it’s not a Mobile, it shows an error message instead
 
         makeCallButton.setOnAction(e ->
+{
+    int displayNumber = getDisplayNumber();
+
+    if (displayNumber != -1)
+    {
+        Gadget g = gadgets.get(displayNumber);
+
+        if (g instanceof Mobile)
         {
-            //This line gets the number the user typed so we know which gadget they want to use.
-            int displayNumber = getDisplayNumber();
+            try {
+                Mobile m = (Mobile) g;
+                String phoneNumber = getPhoneNumberInput();
+                int duration = getDurationInput();
 
-            if (displayNumber != -1)
-            {
-                Gadget g = gadgets.get(displayNumber);
-
-                if (g instanceof Mobile)
-                
-                //This line changes the gadget into a Mobile so we can use Mobile-only methods
-                {
-                    Mobile m = (Mobile) g;
-                    
-                    String phoneNumber = getPhoneNumberInput();
-                    int duration = getDurationInput();
-                    
-                    m.makeCall(getDurationInput());
-                    
-                    logArea.appendText("Call made to " + phoneNumber + " for " + duration + " minutes on gadget " + displayNumber + System.lineSeparator());
-                    
-                }
-                else
-                {
-                    logArea.appendText("That gadget is not a mobile." + System.lineSeparator());
-                }
+                m.makeCall(duration);
+                logArea.appendText("Call made to " + phoneNumber + " for " + duration + " minutes on gadget " + displayNumber + System.lineSeparator());
+            } catch (NumberFormatException ex) {
+                logArea.appendText("Call duration must be an integer." + System.lineSeparator());
             }
-        });
+        }
+        else
+        {
+            logArea.appendText("That gadget is not a mobile." + System.lineSeparator());
+        }
+    }
+});
 
          // Download Music button
          // This button lets the user download music onto an MP3 player.
@@ -251,25 +264,57 @@ public class GadgetShop extends Application
          // A message is shown to confirm the download.
          // If it is not an MP3, it shows an error message.
         downloadMusicButton.setOnAction(e ->
+{
+    int displayNumber = getDisplayNumber();
+
+    if (displayNumber != -1)
+    {
+        Gadget g = gadgets.get(displayNumber);
+
+        if (g instanceof MP3)
         {
-            int displayNumber = getDisplayNumber();
-
-            if (displayNumber != -1)
-            {
-                Gadget g = gadgets.get(displayNumber);
-
-                if (g instanceof MP3)
-                {
-                    MP3 m = (MP3) g;
-                    m.downloadMusic(getDownloadSizeInput());
-                    logArea.appendText("Download attempted on gadget " + displayNumber + System.lineSeparator());
-                }
-                else
-                {
-                    logArea.appendText("That gadget is not an MP3 player." + System.lineSeparator());
-                }
+            try {
+                MP3 m = (MP3) g;
+                int amount = getDownloadSizeInput();
+                m.downloadMusic(amount);
+                logArea.appendText("Download attempted on gadget " + displayNumber + System.lineSeparator());
+            } catch (NumberFormatException ex) {
+                logArea.appendText("Download size must be an integer." + System.lineSeparator());
             }
-        });
+        }
+        else
+        {
+            logArea.appendText("That gadget is not an MP3 player." + System.lineSeparator());
+        }
+    }
+});
+        
+    // Search button
+    // This checks all gadgets to see if any atch the model type in the Model box
+    // If it finds one, it shows the details. IF not, it shows "Model not found"
+    searchButton.setOnAction(e -> {
+    String searchModel = modelField.getText().trim();
+
+    if (searchModel.isEmpty()) {
+        logArea.appendText("Please enter a model to search.\n");
+        return;
+    }
+
+    boolean found = false;
+
+    for (Gadget g : gadgets) {
+        if (g.getModel().equalsIgnoreCase(searchModel)) {
+            logArea.appendText("Found: " + g.toString() + "\n");
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        logArea.appendText("Model not found.\n");
+    }
+});
+
 
         // Add everything to pane
         // Add all the components (labels, text fields, buttons and text area) to the pane.
@@ -288,6 +333,7 @@ public class GadgetShop extends Application
             displayNumberLabel, displayNumberField,
             addMobileButton, addMP3Button, clearButton,
             displayAllButton, makeCallButton, downloadMusicButton,
+            searchButton, 
             logArea
         );
 
